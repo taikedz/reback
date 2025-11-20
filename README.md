@@ -54,6 +54,8 @@ All timestamps are internally recorded in the host's UTC time, with format `YYYY
 
 Reback can be queried via two HTTP endpoints. Any agent can choose which port to listen on, which can be discovered via a UDP query to the main pinging port.
 
+> dev note : implement this in the binary. auto-discover the port, and then issue the HTTP request, transparently
+
 ### `%http-port` to ping receipt port
 
 A UDP packet with a single payload `%http-port` causes the agent to respond with an ASCII-encoded port number to which HTTP queries can be made
