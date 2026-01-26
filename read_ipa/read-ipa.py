@@ -57,7 +57,7 @@ def cli_args():
     non_flattening_options = ["scopes", "force_ip_print", "my_ip"]
 
     if args.short_all:
-        [setattr(args, prop, True) for prop in dir(args) if not prop.startswith("_") and not prop == "scopes"]
+        [setattr(args, prop, True) for prop in dir(args) if not prop.startswith("_") and not prop in ["scopes", "my_ip"] ]
 
     booltypes = [getattr(args, prop) for prop in dir(args) if not prop.startswith("_") and not prop in non_flattening_options]
     args.defaults = not any(booltypes)
