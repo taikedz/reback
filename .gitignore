@@ -2,5 +2,7 @@
 bin/
 *.exe
 
+*.pyc
+
 # I use a local gopath with containers... don't worry about it
 go.path/

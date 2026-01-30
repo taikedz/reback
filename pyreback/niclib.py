@@ -22,17 +22,21 @@ class NIC:
         self.mac = None
 
         self.ip4ip = None
+        self.ip4brd = None
         self.ip4scopes = None
 
         self.ip6ip = None
+        self.ip6brd = None
         self.ip6scopes = None
 
     def __str__(self):
         detail = [f"{self.name} ({self.type}, {self.state}) : {self.mac}"]
         if self.ip4ip:
             detail.append(f"  {self.ip4ip} -> {self.ip4scopes}")
+            detail.append(f"    broadcast: {self.ip4brd}")
         if self.ip6ip:
             detail.append(f"  {self.ip6ip} -> {self.ip6scopes}")
+            detail.append(f"    broadcast: {self.ip6brd}")
 
         return '\n'.join(detail)
 
@@ -77,17 +81,25 @@ def parse_ipa(data):
                 nics.append(current_nic)
 
             current_nic = NIC(m.group(1), m.group(2) )
+
         elif current_nic is None:
             raise ParseError(f"Got a block inner line before a block was declared - line: {repr(L)}")
+
         elif m := re.match(r"link/([a-z0-9]+)\s+([a-f0-9:]+)", L.strip()):
             current_nic.type = m.group(1)
             current_nic.mac = m.group(2)
-        elif m := re.match(r"inet\s+([0-9./]+).+?scope (.+)", L.strip()):
+
+        elif m := re.match(r"inet\s+([0-9./]+)(.+)?scope (.+)", L.strip()):
             current_nic.ip4ip = m.group(1)
-            current_nic.ip4scopes = m.group(2)
-        elif m := re.match(r"inet6\s+([0-9a-f:/]+).+?scope (.+)", L.strip()):
+            current_nic.ip4scopes = m.group(3)
+            if mb := re.match(r"\s*brd ([0-9.]+)", m.group(2)):
+                current_nic.ip4brd = mb.group(1)
+
+        elif m := re.match(r"inet6\s+([0-9a-f:/]+)(.+?)scope (.+)", L.strip()):
             current_nic.ip6ip = m.group(1)
-            current_nic.ip6scopes = m.group(2)
+            current_nic.ip6scopes = m.group(3)
+            if mb := re.match(r"\s*brd ([0-9a-f:]+)", m.group(2)):
+                current_nic.ip6brd = mb.group(1)
 
     if current_nic:
         nics.append(current_nic)
@@ -105,6 +117,20 @@ def find_default_route_devicenames():
             m = re.match(".+?dev ([a-zA-Z0-9@]+)", line)
             defaults.append(m.group(1))
     return defaults
+
+
+def get_public_nics():
+    proc = Popen(["ip", "a"], stdout=PIPE)
+    stdout, _ = proc.communicate()
+    nics = parse_ipa(str(stdout, 'utf-8'))
+
+    names = find_default_route_devicenames()
+    if not names:
+        raise ValueError("No default route detected")
+    else:
+        nics = [nic for nic in nics if nic.name in names]
+
+    return nics
 
 
 def main():
