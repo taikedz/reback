@@ -70,3 +70,10 @@ Causes the peer to send `text/plain` information back as a response.
 It is the peer's discretion to determine what to send back, specified by its `-I INFO_SCRIPT` parameter. By default, this is simply the output of the `uptime; free -h; df -h` shell commands on Nix hosts. Windows hosts it's the output of `powershell -nologo -noprofile Get-Counter`
 
 If the agent should be configured to not send anything, simply use an empty script file. The agent will still send a message stating `All information is private.` as a fixed string.
+
+## Deployment
+
+Item can be installed as a system service - provide a systemd spec, include enable/start in install script
+
+Ensure it runs as a "nobody" user?
+
